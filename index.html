@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Task Manager</title>
+  <style>
+    :root{
+      --bg-1:#f7fafc;
+      --bg-2:#f1f5f9;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --accent:#4f46e5;
+      --accent-dark:#4338ca;
+      --success:#16a34a;
+      --danger:#dc2626;
+      --radius:12px;
+      --shadow: 0 6px 20px rgba(15,23,42,0.06);
+      --glass: rgba(255,255,255,0.6);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      padding:32px;
+      background: linear-gradient(135deg,var(--bg-1),var(--bg-2));
+      color:#0f172a;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      display:flex;
+      justify-content:center;
+    }
+
+    .container{
+      width:100%;
+      max-width:920px;
+    }
+
+    .header{
+      text-align:center;
+      margin-bottom:28px;
+    }
+    .title{
+      font-size:28px;
+      font-weight:700;
+      margin:0;
+      color:#0b1220;
+    }
+    .subtitle{
+      margin-top:6px;
+      color:var(--muted);
+    }
+
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:20px;
+      margin-bottom:18px;
+    }
+
+    .top-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:12px;
+    }
+
+    .h2{font-size:18px;margin:0;font-weight:600;color:#0b1220}
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:10px;
+      border:0;
+      background:var(--accent);
+      color:#fff;
+      cursor:pointer;
+      font-weight:600;
+      transition:all .15s ease;
+    }
+    .btn:hover{background:var(--accent-dark)}
+    .btn.ghost{background:transparent;color:var(--muted);border:1px solid #edf2ff}
+    .btn.small{padding:6px 8px;font-size:14px;border-radius:8px}
+
+    .form-area{
+      margin-bottom:14px;
+      background:#f8fafc;
+      padding:14px;
+      border-radius:10px;
+      border:1px solid #eef2ff;
+    }
+
+    .grid-2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+    .grid-3{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:12px;
+    }
+
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type="text"], input[type="date"], select, textarea{
+      width:100%;
+      padding:10px 12px;
+      border-radius:8px;
+      border:1px solid #e6edf3;
+      background:#fff;
+      font-size:14px;
+      color:#0b1220;
+    }
+    textarea{min-height:64px;resize:vertical;padding-top:8px}
+
+    .controls{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+    .filter-btn{
+      padding:8px 12px;border-radius:10px;border:1px solid transparent;background:#fff;color:var(--muted);cursor:pointer;font-weight:600;
+    }
+    .filter-btn.active{background:var(--accent);color:#fff}
+
+    .empty{
+      text-align:center;padding:36px 8px;color:var(--muted)
+    }
+
+    ul.task-list{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+    .task{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      padding:12px;border-radius:10px;border:1px solid #e8eef6;
+      background:#fff;
+      transition:all .15s ease;
+    }
+    .task:hover{box-shadow:0 6px 18px rgba(15,23,42,0.04)}
+    .check{
+      width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;border:2px solid #d1d5db;flex-shrink:0;cursor:pointer;
+    }
+    .check.done{background:var(--accent);border-color:var(--accent);color:white}
+    .task-main{flex:1;min-width:0}
+    .task-title{font-weight:700;margin:0}
+    .task-title.done{color:#6b7280;text-decoration:line-through;font-weight:600}
+    .task-desc{margin:6px 0 0;color:#475569;font-size:14px}
+    .meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;align-items:center}
+    .meta .pill{display:inline-flex;gap:8px;align-items:center;padding:6px 8px;border-radius:999px;font-size:12px;background:#f1f5f9;color:var(--muted)}
+    .meta .pill .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+    .meta .date{color:var(--muted);font-size:13px}
+
+    .actions{display:flex;gap:8px;align-items:center;margin-left:8px}
+    .icon-btn{background:transparent;border:0;cursor:pointer;color:var(--muted);padding:6px;border-radius:8px}
+    .icon-btn:hover{background:#f8fafc;color:var(--danger)}
+
+    .footer{
+      display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid #eef2ff;color:var(--muted)
+    }
+
+    /* responsive */
+    @media (max-width:800px){
+      .grid-2{grid-template-columns:1fr}
+      .grid-3{grid-template-columns:1fr 1fr}
+      .top-row{flex-direction:column;align-items:stretch;gap:8px}
+      .footer{flex-direction:column;gap:8px;align-items:flex-start}
+    }
+
+    /* small helpers */
+    .muted{color:var(--muted);font-size:13px}
+    .badge-low{background:#ecfdf5;color:var(--success);padding:6px;border-radius:8px}
+    .badge-med{background:#fffbeb;color:#92400e;padding:6px;border-radius:8px}
+    .badge-high{background:#fff1f2;color:var(--danger);padding:6px;border-radius:8px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1 class="title">Task Manager</h1>
+      <p class="subtitle">Organize your work and personal tasks efficiently</p>
+    </header>
+
+    <section class="card" id="main-card">
+      <div class="top-row">
+        <h2 class="h2">Your Tasks</h2>
+        <button class="btn" id="toggle-form-btn" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span id="toggle-form-text">Add Task</span>
+        </button>
+      </div>
+
+      <div id="form-area" class="form-area" style="display:none;">
+        <div class="grid-2" style="margin-bottom:12px">
+          <div>
+            <label for="title">Task Title *</label>
+            <input id="title" type="text" placeholder="What needs to be done?" />
+          </div>
+          <div>
+            <label for="category">Category</label>
+            <select id="category">
+              <option value="work">Work</option>
+              <option value="personal">Personal</option>
+              <option value="shopping">Shopping</option>
+              <option value="health">Health</option>
+              <option value="learning">Learning</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-3" style="margin-bottom:12px">
+          <div>
+            <label for="priority">Priority</label>
+            <select id="priority">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+          <div>
+            <label for="dueDate">Due Date</label>
+            <input id="dueDate" type="date"/>
+          </div>
+          <div style="display:flex;align-items:flex-end">
+            <button id="add-btn" class="btn" style="width:100%" disabled>Add Task</button>
+          </div>
+        </div>
+
+        <div>
+          <label for="description">Description</label>
+          <textarea id="description" placeholder="Add details..." rows="2"></textarea>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="controls">
+          <button class="filter-btn active" data-filter="all">All Tasks</button>
+          <button class="filter-btn" data-filter="active">Active</button>
+          <button class="filter-btn" data-filter="completed">Completed</button>
+        </div>
+      </div>
+
+      <div id="tasks-container" style="margin-top:12px">
+        <!-- populated by JS -->
+      </div>
+
+      <div id="footer-area" style="display:none" class="footer">
+        <div class="muted" id="progress-text">0 of 0 tasks completed</div>
+        <div id="clear-area"></div>
+      </div>
+    </section>
+
+    <div style="text-align:center;color:var(--muted);font-size:13px">
+      <p>Organize your tasks efficiently. Click "Add Task" to get started.</p>
+    </div>
+  </div>
+
+<script>
+  // Data structures & defaults
+  const categories = [
+    { id: "work", name: "Work", color: "#3b82f6" },
+    { id: "personal", name: "Personal", color: "#10b981" },
+    { id: "shopping", name: "Shopping", color: "#f59e0b" },
+    { id: "health", name: "Health", color: "#ef4444" },
+    { id: "learning", name: "Learning", color: "#8b5cf6" },
+  ];
+  const priorities = [
+    { id: "low", name: "Low" },
+    { id: "medium", name: "Medium" },
+    { id: "high", name: "High" },
+  ];
+
+  // DOM
+  const toggleFormBtn = document.getElementById('toggle-form-btn');
+  const toggleFormText = document.getElementById('toggle-form-text');
+  const formArea = document.getElementById('form-area');
+  const addBtn = document.getElementById('add-btn');
+  const titleInput = document.getElementById('title');
+  const descInput = document.getElementById('description');
+  const categorySelect = document.getElementById('category');
+  const prioritySelect = document.getElementById('priority');
+  const dueDateInput = document.getElementById('dueDate');
+  const tasksContainer = document.getElementById('tasks-container');
+  const progressText = document.getElementById('progress-text');
+  const footerArea = document.getElementById('footer-area');
+  const clearArea = document.getElementById('clear-area');
+  const filterButtons = document.querySelectorAll('.filter-btn');
+
+  let tasks = [];
+  let filter = 'all';
+
+  const STORAGE_KEY = 'tasks_v1';
+
+  // Helpers
+  function saveTasks(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    render();
+  }
+
+  function loadTasks(){
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw) tasks = JSON.parse(raw);
+    } catch (e) { tasks = []; }
+  }
+
+  function uid(){
+    return Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+  }
+
+  function formatDatePretty(dateString){
+    if(!dateString) return '';
+    const d = new Date(dateString);
+    // options to show "Nov 14, 2025"
+    const opts = { year: 'numeric', month: 'short', day: 'numeric' };
+    return d.toLocaleDateString(undefined, opts);
+  }
+  function formatCreatedShort(iso){
+    const d = new Date(iso);
+    const opts = { month: 'short', day: 'numeric' };
+    return d.toLocaleDateString(undefined, opts);
+  }
+
+  // Render
+  function render(){
+    // filter tasks
+    let visible = tasks.slice();
+    if(filter === 'active') visible = visible.filter(t => !t.completed);
+    if(filter === 'completed') visible = visible.filter(t => t.completed);
+
+    // container
+    if(visible.length === 0){
+      tasksContainer.innerHTML = `
+        <div class="empty">
+          <div style="width:64px;height:64px;margin:0 auto;border:2px dashed #e6edf3;border-radius:12px"></div>
+          <h3 style="margin:10px 0 6px">${filter === 'completed' ? 'No completed tasks yet' : filter === 'active' ? 'All tasks completed!' : 'No tasks yet'}</h3>
+          <p style="color:var(--muted)">${filter === 'all' ? 'Add your first task to get started' : 'Great job staying organized!'}</p>
+        </div>
+      `;
+    } else {
+      const nodes = visible.map(taskToHTML).join('');
+      tasksContainer.innerHTML = `<ul class="task-list">${nodes}</ul>`;
+      // attach listeners (delegation would be nicer but simpler this way)
+      document.querySelectorAll('.toggle-complete-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          toggleTaskCompletion(btn.dataset.id);
+        });
+      });
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          deleteTask(btn.dataset.id);
+        });
+      });
+    }
+
+    // footer & clear completed
+    const total = tasks.length;
+    const completed = tasks.filter(t => t.completed).length;
+    if(total === 0){
+      footerArea.style.display = 'none';
+    } else {
+      footerArea.style.display = 'flex';
+      progressText.textContent = `${completed} of ${total} tasks completed`;
+      if(filter === 'all' && completed > 0){
+        clearArea.innerHTML = `<button class="icon-btn small" id="clear-completed" style="color:var(--danger);font-weight:700">Clear Completed</button>`;
+        document.getElementById('clear-completed').addEventListener('click', () => {
+          tasks = tasks.filter(t => !t.completed);
+          saveTasks();
+        });
+      } else {
+        clearArea.innerHTML = '';
+      }
+    }
+
+    // enable/disable add button based on title
+    addBtn.disabled = !titleInput.value.trim();
+  }
+
+  function taskToHTML(t){
+    const cat = categories.find(c => c.id === t.category);
+    const pri = t.priority;
+    const priorityBadge = pri === 'low' ? '<span class="pill badge-low">Low</span>' :
+                           pri === 'medium' ? '<span class="pill badge-med">Medium</span>' : '<span class="pill badge-high">High</span>';
+    return `
+      <li class="task" data-id="${t.id}">
+        <button class="check ${t.completed ? 'done' : ''} toggle-complete-btn" title="Toggle complete" data-id="${t.id}">
+          ${t.completed ? '&#10003;' : ''}
+        </button>
+
+        <div class="task-main">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div style="min-width:0">
+              <h3 class="task-title ${t.completed ? 'done' : ''}">${escapeHtml(t.title)}</h3>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="icon-btn delete-btn" title="Delete" data-id="${t.id}">
+                <svg xmlns="http://www.w3.org/2000/svg" style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            </div>
+          </div>
+
+          ${t.description ? `<p class="task-desc">${escapeHtml(t.description)}</p>` : ''}
+
+          <div class="meta">
+            <div class="pill" title="Category">
+              <span class="dot" style="background:${cat ? cat.color : '#94a3b8'}"></span>
+              <span style="font-size:13px;color:var(--muted)">${cat ? cat.name : 'Other'}</span>
+            </div>
+
+            <div class="pill" title="Priority" style="background:transparent;border-radius:8px;padding:6px">
+              ${priorityBadge}
+            </div>
+
+            ${t.dueDate ? `<div class="pill"><svg xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px;margin-right:6px" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M8 7V3M16 7V3M3 11h18M5 21h14a2 2 0 0 0 2-2V7H3v12a2 2 0 0 0 2 2z" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="date">${formatDateClient(t.dueDate)}</span></div>` : ''}
+
+            <div class="pill" title="Created At" style="background:transparent;border-radius:8px;padding:6px">
+              <svg xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px;margin-right:6px" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 8v5l3 3" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span class="date">${formatCreatedShort(t.createdAt)}</span>
+            </div>
+          </div>
+        </div>
+      </li>
+    `;
+  }
+
+  // escape helper to avoid HTML injection
+  function escapeHtml(str){
+    if(!str) return '';
+    return String(str).replace(/[&<>"']/g, function(m){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]);
+    });
+  }
+
+  // finalize date formatting for due date to "Nov 14, 2025"
+  function formatDateClient(dateString){
+    if(!dateString) return '';
+    const d = new Date(dateString + 'T00:00:00'); // ensure consistent
+    const opts = { year: 'numeric', month: 'short', day: 'numeric' };
+    return d.toLocaleDateString(undefined, opts);
+  }
+
+  // Actions
+  function addTask(){
+    const title = titleInput.value.trim();
+    if(!title) return;
+    const newTask = {
+      id: uid(),
+      title,
+      description: descInput.value.trim(),
+      category: categorySelect.value,
+      priority: prioritySelect.value,
+      dueDate: dueDateInput.value || null,
+      completed: false,
+      createdAt: new Date().toISOString(),
+    };
+    tasks.unshift(newTask);
+    saveTasks();
+    resetForm();
+  }
+
+  function resetForm(){
+    titleInput.value = '';
+    descInput.value = '';
+    categorySelect.value = 'work';
+    prioritySelect.value = 'medium';
+    dueDateInput.value = '';
+    formArea.style.display = 'none';
+    toggleFormText.textContent = 'Add Task';
+    addBtn.disabled = true;
+  }
+
+  function toggleTaskCompletion(id){
+    tasks = tasks.map(t => t.id === id ? {...t, completed: !t.completed} : t);
+    saveTasks();
+  }
+
+  function deleteTask(id){
+    tasks = tasks.filter(t => t.id !== id);
+    saveTasks();
+  }
+
+  // Events
+  toggleFormBtn.addEventListener('click', () => {
+    const showing = formArea.style.display !== 'none';
+    formArea.style.display = showing ? 'none' : 'block';
+    toggleFormText.textContent = showing ? 'Add Task' : 'Cancel';
+    if(!showing){
+      titleInput.focus();
+    }
+  });
+
+  titleInput.addEventListener('input', () => {
+    addBtn.disabled = !titleInput.value.trim();
+  });
+
+  // Enter key on title -> add (prevent when shift)
+  titleInput.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      if(!addBtn.disabled) addTask();
+    }
+  });
+
+  // Enter in description should behave normally (allows newline with shift+enter)
+  descInput.addEventListener('keydown', (e) => {
+    // nothing special; kept for parity with react version
+  });
+
+  addBtn.addEventListener('click', addTask);
+
+  // Filter buttons
+  filterButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filter = btn.dataset.filter;
+      render();
+    });
+  });
+
+  // init
+  loadTasks();
+  render();
+
+  // expose for debugging (optional)
+  window.__TASKS = {
+    get: () => tasks,
+    save: saveTasks,
+    reset: () => { tasks = []; saveTasks(); }
+  };
+</script>
+</body>
+</html>
